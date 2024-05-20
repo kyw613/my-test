@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build_backend:
+    name: Build and Push Backend Docker Image
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'Build Backend')
+    outputs:
+      TAG: ${{ steps.extract_tag.outputs.TAG }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Extract tag from commit message
+        id: extract_tag
+        run: |
+          TAG=$(echo "${{ github.event.head_commit.message }}" | grep -oP 'Build Backend: \s*\K[\w\.]+')
+          echo "Extracted tag is $TAG"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./aws-wiki-backend
+          file: ./aws-wiki-backend/Dockerfile
+          push: true
+          tags: kimyoungwoo613/cicd-backend:${{ env.TAG }}
+
+  build_frontend:
+    name: Build and Push Frontend Docker Image
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'Build Frontend')
+    outputs:
+      TAG: ${{ steps.extract_tag.outputs.TAG }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Extract tag from commit message
+        id: extract_tag
+        run: |
+          TAG=$(echo "${{ github.event.head_commit.message }}" | grep -oP 'Build Frontend: \s*\K[\w\.]+')
+          echo "Extracted tag is $TAG"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./aws-wiki-frontend
+          file: ./aws-wiki-frontend/Dockerfile
+          push: true
+          tags: kimyoungwoo613/cicd-frontend:${{ env.TAG }}
+		  
+  update_manifest:
+    name: Update Kubernetes Manifest and Push Changes
+    runs-on: ubuntu-latest
+    needs: [build_backend, build_frontend]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Setup Git   # 
+        run: |
+          git config user.name "kyw613"
+          git config user.email "rladuddn613@naver.com"
+          git config credential.helper store
+
+      - name: Update Backend Image in Manifest
+        run: |
+          TAG_BACKEND=${{ needs.build_backend.outputs.TAG }}
+          sed -i "s|kimyoungwoo613/cicd-backend:[^ ]*|kimyoungwoo613/cicd-backend:$TAG_BACKEND|" manifest/backend.yaml
+
+      - name: Update Frontend Image in Manifest
+        run: |
+          TAG_FRONTEND=${{ needs.build_frontend.outputs.TAG }}
+          sed -i "s|kimyoungwoo613/cicd-frontend:[^ ]*|kimyoungwoo613/cicd-frontend:$TAG_FRONTEND|" manifest/frontend.yaml
+
+      - name: Commit and Push Changes
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git add manifest/
+            git commit -m ":tada: Update: Backend [$TAG_BACKEND] and Frontend [$TAG_FRONTEND] images"
+            git push
