@@ -33,7 +33,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: ../aws-wiki-backend  # 현재 위치에서 상위로 가서 aws-wiki-backend 폴더로 이동
+          context: ./aws-wiki-backend
+          file: ./aws-wiki-backend/Dockerfile
           push: true
           tags: kimyoungwoo613/cicd-backend:${{ env.TAG }}
 
