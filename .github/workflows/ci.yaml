@@ -70,6 +70,7 @@ jobs:
           push: true
           tags: kimyoungwoo613/cicd-frontend:${{ env.TAG }}
 
+
 		  
   update_manifest:
     name: Update Kubernetes Manifest and Push Changes
