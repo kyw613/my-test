@@ -87,12 +87,20 @@ jobs:
 
       - name: Update Backend Image in Manifest
         run: |
-          TAG_BACKEND=${{ needs.build_backend.outputs.result == 'success' ? needs.build_backend.outputs.TAG : 'default' }}
+          if [[ "${{ needs.build_backend.outputs.result }}" == 'success' ]]; then
+            TAG_BACKEND=${{ needs.build_backend.outputs.TAG }}
+          else
+            TAG_BACKEND='default'
+          fi
           sed -i "s|kimyoungwoo613/cicd-backend:[^ ]*|kimyoungwoo613/cicd-backend:$TAG_BACKEND|" manifest/backend.yaml
 
       - name: Update Frontend Image in Manifest
         run: |
-          TAG_FRONTEND=${{ needs.build_frontend.outputs.result == 'success' ? needs.build_frontend.outputs.TAG : 'default' }}
+          if [[ "${{ needs.build_frontend.outputs.result }}" == 'success' ]]; then
+            TAG_FRONTEND=${{ needs.build_frontend.outputs.TAG }}
+          else
+            TAG_FRONTEND='default'
+          fi
           sed -i "s|kimyoungwoo613/cicd-frontend:[^ ]*|kimyoungwoo613/cicd-frontend:$TAG_FRONTEND|" manifest/frontend.yaml
 
       - name: Commit and Push Changes
@@ -103,4 +111,5 @@ jobs:
             git add manifest/
             git commit -m ":tada: Update: Backend [$TAG_BACKEND] and Frontend [$TAG_FRONTEND] images"
             git push
+
 
