@@ -72,11 +72,13 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GH_TOKEN }}
+  
       - name: Setup Git
         run: |
           git config user.name "kyw613"
           git config user.email "rladuddn613@naver.com"
           git config credential.helper store
+  
       - name: Update Backend Image in Manifest
         run: |
           if [[ "${{ needs.build_backend.result }}" == 'success' ]]; then
@@ -85,6 +87,7 @@ jobs:
             TAG_BACKEND='default'
           fi
           sed -i "s|kimyoungwoo613/cicd-backend:[^ ]*|kimyoungwoo613/cicd-backend:$TAG_BACKEND|" manifest/backend.yaml
+  
       - name: Update Frontend Image in Manifest
         run: |
           if [[ "${{ needs.build_frontend.result }}" == 'success' ]]; then
@@ -93,8 +96,10 @@ jobs:
             TAG_FRONTEND='default'
           fi
           sed -i "s|kimyoungwoo613/cicd-frontend:[^ ]*|kimyoungwoo613/cicd-frontend:$TAG_FRONTEND|" manifest/frontend.yaml
+  
       - name: Commit and Push Changes
         run: |
           git add manifest/
           git commit -m ":tada: Update: Backend [$TAG_BACKEND] and Frontend [$TAG_FRONTEND] images regardless of changes"
           git push
+  
