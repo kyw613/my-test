@@ -53,8 +53,8 @@ jobs:
         run: |
           TAG=$(echo "${{ github.event.head_commit.message }}" | grep -oP 'Build Frontend: \s*\K[\w\.]+')
           echo "Extracted tag is $TAG"
-          echo "TAG=$TAG" >> $GITHUB_ENV
-          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "TAG1=$TAG" >> $GITHUB_ENV
+          echo "TAG1=$TAG" >> $GITHUB_OUTPUT
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -68,7 +68,7 @@ jobs:
           context: ./aws-wiki-frontend
         #  file: ./aws-wiki-frontend/Dockerfile
           push: true
-          tags: kimyoungwoo613/cicd-backend:${{ env.TAG }}
+          tags: kimyoungwoo613/cicd-backend:${{ env.TAG1 }}
 	  
   update_manifest:
     name: Update Kubernetes Manifest and Push Changes
