@@ -92,4 +92,13 @@ jobs:
       - name: Update Frontend Image in Manifest
         run: |
           TAG_FRONTEND=${{ needs.build_frontend.outputs.TAG }}
-          sed -i "s|kimyoungwoo613/cicd-frontend:[^ ]*|kimyoungwoo613/cicd-frontend:$
+          sed -i "s|kimyoungwoo613/cicd-frontend:[^ ]*|kimyoungwoo613/cicd-frontend:$TAG_FRONTEND|" manifest/frontend.yaml
+
+      - name: Commit and Push Changes
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git add manifest/
+            git commit -m ":tada: Update: Backend [$TAG_BACKEND] and Frontend [$TAG_FRONTEND] images"
+            git push
