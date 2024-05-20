@@ -68,7 +68,7 @@ jobs:
           context: ./aws-wiki-frontend/
           file: ./aws-wiki-frontend/Dockerfile
           push: true
-          tags: kimyoungwoo613/cicd-frontend:${{ env.TAG }}
+          tags: tags: kimyoungwoo613/cicd-frontend:${{ env.TAG }}
 		  
   update_manifest:
     name: Update Kubernetes Manifest and Push Changes
