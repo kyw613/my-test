@@ -9,7 +9,7 @@ metadata:
 spec:
   containers:
   - name: django-container
-    image: codingalice/aws-wiki-back:1.0
+    image: kimyoungwoo613/cicd-backend:1.0
     ports:
     - containerPort: 8000
     env:
