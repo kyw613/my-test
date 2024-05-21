@@ -1,4 +1,4 @@
-asgiref==3.8.1
+#asgiref==3.8.1
 cachetools==5.3.3
 certifi==2024.2.2
 charset-normalizer==3.3.2
@@ -23,5 +23,5 @@ urllib3==2.2.1
 cx_Oracle
 mysql-connector-python
 ###############
-###############
+################
 ###############
