@@ -72,7 +72,7 @@ jobs:
         (contains(github.event.head_commit.message, 'Build Backend') && needs.build_backend.result == 'success') || 
         (contains(github.event.head_commit.message, 'Build Frontend') && needs.build_frontend.result == 'success')
       )
-    needs: [build_backend, build_frontend]
+  #  needs: [build_backend, build_frontend]
   
     steps:
       - name: Check out code
