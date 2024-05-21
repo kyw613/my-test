@@ -65,7 +65,7 @@ jobs:
   update_manifest:
       name: Update Kubernetes Manifest and Push Changes
       runs-on: ubuntu-latest
-      if: (github.event_name == 'push' && (contains(github.event.head_commit.message, 'push backend') || contains(github.event.head_commit.message, 'push frontend')))
+      if: (github.event_name == 'push' && (contains(github.event.head_commit.message, 'Build Backend') || contains(github.event.head_commit.message, 'Build Frontend')))
       needs: [build_backend, build_frontend]
     
       steps:
@@ -81,13 +81,13 @@ jobs:
             git config credential.helper store
     
         - name: Update Backend Image in Manifest
-          if: (github.event.head_commit.message == 'push backend' && needs.build_backend.result == 'success')
+          if: (github.event.head_commit.message == 'Build Backend' && needs.build_backend.result == 'success')
           run: |
             TAG_BACKEND=${{ needs.build_backend.outputs.TAG }}
             sed -i "s|kimyoungwoo613/cicd-backend:[^ ]*|kimyoungwoo613/cicd-backend:$TAG_BACKEND|" manifest/backend.yaml
     
         - name: Update Frontend Image in Manifest
-          if: (github.event.head_commit.message == 'push frontend' && needs.build_frontend.result == 'success')
+          if: (github.event.head_commit.message == 'Build Frontend' && needs.build_frontend.result == 'success')
           run: |
             TAG_FRONTEND=${{ needs.build_frontend.outputs.TAG }}
             sed -i "s|kimyoungwoo613/cicd-frontend:[^ ]*|kimyoungwoo613/cicd-frontend:$TAG_FRONTEND|" manifest/frontend.yaml
