@@ -65,36 +65,34 @@ jobs:
   update_manifest:
     name: Update Kubernetes Manifest and Push Changes
     runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'push' && 
-      (
-        (contains(github.event.head_commit.message, 'Build Backend') && success()) ||
-        (contains(github.event.head_commit.message, 'Build Frontend') && success())
-      )
-    needs: [build_backend, build_frontend]
+    if: github.event_name == 'push'
     steps:
       - name: Check out code
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GH_TOKEN }}
+  
       - name: Setup Git
         run: |
           git config user.name "kyw613"
           git config user.email "rladuddn613@naver.com"
           git config credential.helper store
+  
       - name: Update Backend Image in Manifest
-        if: contains(github.event.head_commit.message, 'Build Backend') && needs.build_backend.result == 'success'
+        if: contains(github.event.head_commit.message, 'Build Backend')
         run: |
-          TAG_BACKEND=${{ needs.build_backend.outputs.TAG }}
-          sed -i "s|kimyoungwoo613/cicd-backend:[^ ]*|kimyoungwoo613/cicd-backend:$TAG_BACKEND|" manifest/backend.yaml
+          TAG=$(echo "${{ github.event.head_commit.message }}" | grep -oP 'Build Backend: \s*\K[\w\.]+')
+          sed -i "s|kimyoungwoo613/cicd-backend:[^ ]*|kimyoungwoo613/cicd-backend:$TAG|" manifest/backend.yaml
+  
       - name: Update Frontend Image in Manifest
-        if: contains(github.event.head_commit.message, 'Build Frontend') && needs.build_frontend.result == 'success'
+        if: contains(github.event.head_commit.message, 'Build Frontend')
         run: |
-          TAG_FRONTEND=${{ needs.build_frontend.outputs.TAG }}
-          sed -i "s|kimyoungwoo613/cicd-frontend:[^ ]*|kimyoungwoo613/cicd-frontend:$TAG_FRONTEND|" manifest/frontend.yaml
+          TAG=$(echo "${{ github.event.head_commit.message }}" | grep -oP 'Build Frontend: \s*\K[\w\.]+')
+          sed -i "s|kimyoungwoo613/cicd-frontend:[^ ]*|kimyoungwoo613/cicd-frontend:$TAG|" manifest/frontend.yaml
+  
       - name: Commit and Push Changes
-        if: needs.build_backend.result == 'success' || needs.build_frontend.result == 'success'
         run: |
           git add manifest/
           git commit -m ":tada: Updated Kubernetes manifest with new Docker images."
           git push
+
