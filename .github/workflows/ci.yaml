@@ -63,39 +63,38 @@ jobs:
           tags: kimyoungwoo613/cicd-frontend:${{ env.TAG }}
 
   update_manifest:
-    name: Update Kubernetes Manifest and Push Changes
-    runs-on: ubuntu-latest
-    # if 조건을 수정하여 백엔드 또는 프론트엔드 빌드가 실행되었는지 확인
-    if: (github.event_name == 'push' && (contains(github.event.head_commit.message, 'Build Backend') || contains(github.event.head_commit.message, 'Build Frontend')))
-    needs: [build_backend, build_frontend]
-  
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GH_TOKEN }}  # GitHub 토큰을 사용하여 코드를 체크아웃합니다.
-  
-      - name: Setup Git
-        run: |
-          git config user.name "kyw613"
-          git config user.email "rladuddn613@naver.com"
-          git config credential.helper store  # Git 설정을 구성합니다.
-  
-      - name: Update Backend Image in Manifest
-        if: success() && needs.build_backend.result == 'success' # 백엔드 빌드가 성공했을 경우에만 실행
-        run: |
-          TAG_BACKEND=${{ needs.build_backend.outputs.TAG }}
-          sed -i "s|kimyoungwoo613/cicd-backend:[^ ]*|kimyoungwoo613/cicd-backend:$TAG_BACKEND|" manifest/backend.yaml  # 백엔드 이미지 태그를 매니페스트 파일에서 업데이트합니다.
-  
-      - name: Update Frontend Image in Manifest
-        if: success() && needs.build_frontend.result == 'success' # 프론트엔드 빌드가 성공했을 경우에만 실행
-        run: |
-          TAG_FRONTEND=${{ needs.build_frontend.outputs.TAG }}
-          sed -i "s|kimyoungwoo613/cicd-frontend:[^ ]*|kimyoungwoo613/cicd-frontend:$TAG_FRONTEND|" manifest/frontend.yaml  # 프론트엔드 이미지 태그를 매니페스트 파일에서 업데이트합니다.
-  
-      - name: Commit and Push Changes
-        if: success() # 적어도 한 작업이 성공했을 때 실행
-        run: |
-          git add manifest/
-          git commit -m ":tada: Update: Backend [$TAG_BACKEND] and Frontend [$TAG_FRONTEND] images regardless of changes"
-          git push  # 변경된 매니페스트 파일을 커밋하고 푸시합니다.
+      name: Update Kubernetes Manifest and Push Changes
+      runs-on: ubuntu-latest
+      if: (github.event_name == 'push' && (contains(github.event.head_commit.message, 'push backend') || contains(github.event.head_commit.message, 'push frontend')))
+      needs: [build_backend, build_frontend]
+    
+      steps:
+        - name: Check out code
+          uses: actions/checkout@v3
+          with:
+            token: ${{ secrets.GH_TOKEN }}
+    
+        - name: Setup Git
+          run: |
+            git config user.name "kyw613"
+            git config user.email "rladuddn613@naver.com"
+            git config credential.helper store
+    
+        - name: Update Backend Image in Manifest
+          if: (github.event.head_commit.message == 'push backend' && needs.build_backend.result == 'success')
+          run: |
+            TAG_BACKEND=${{ needs.build_backend.outputs.TAG }}
+            sed -i "s|kimyoungwoo613/cicd-backend:[^ ]*|kimyoungwoo613/cicd-backend:$TAG_BACKEND|" manifest/backend.yaml
+    
+        - name: Update Frontend Image in Manifest
+          if: (github.event.head_commit.message == 'push frontend' && needs.build_frontend.result == 'success')
+          run: |
+            TAG_FRONTEND=${{ needs.build_frontend.outputs.TAG }}
+            sed -i "s|kimyoungwoo613/cicd-frontend:[^ ]*|kimyoungwoo613/cicd-frontend:$TAG_FRONTEND|" manifest/frontend.yaml
+    
+        - name: Commit and Push Changes
+          if: success()
+          run: |
+            git add manifest/
+            git commit -m ":tada: Update: Backend [$TAG_BACKEND] and Frontend [$TAG_FRONTEND] images based on respective pushes"
+            git push
